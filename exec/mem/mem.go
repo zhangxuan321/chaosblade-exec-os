@@ -19,6 +19,7 @@ package mem
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"path"
@@ -264,12 +265,22 @@ func calculateMemSize(ctx context.Context, burnMemMode string, percent, reserve 
 
 var dirName = "burnmem_tmpfs"
 
+var tmpfsName = "chaos_burn"
+
 var fileName = "file"
 
 var fileCount = 1
 
 func burnMemWithCache(ctx context.Context, memPercent, memReserve, memRate int, burnMemMode string, includeBufferCache bool, cl spec.Channel) {
-	filePath := path.Join(path.Join(util.GetProgramPath(), dirName), fileName)
+	tmpfsPath := path.Join(util.GetProgramPath(), dirName)
+	filePath := path.Join(tmpfsPath, fileName)
+	// prepare tmpfs
+	cl.Run(ctx, "mkdir", fmt.Sprintf("-p %s", tmpfsPath))
+	cl.Run(ctx, "mount", fmt.Sprintf("-t tmpfs -o size=100%% %s %s", tmpfsName, tmpfsPath))
+
+	if memRate <= 0 {
+		memRate = 100
+	}
 	tick := time.Tick(time.Second)
 	for range tick {
 		_, expectMem, err := calculateMemSize(ctx, burnMemMode, memPercent, memReserve, includeBufferCache)
@@ -281,6 +292,7 @@ func burnMemWithCache(ctx context.Context, memPercent, memReserve, memRate int, 
 			if expectMem > int64(memRate) {
 				fillMem = int64(memRate)
 			}
+			log.Debugf(ctx, "burn mem with cache fill memory: %d", fillMem)
 			nFilePath := fmt.Sprintf("%s%d", filePath, fileCount)
 			response := cl.Run(ctx, "dd", fmt.Sprintf("if=/dev/zero of=%s bs=1M count=%d", nFilePath, fillMem))
 			if !response.Success {
@@ -354,5 +366,10 @@ func (ce *memExecutor) start(ctx context.Context, memPercent, memReserve, memRat
 // stop burn mem
 func (ce *memExecutor) stop(ctx context.Context, burnMemMode string) *spec.Response {
 	ctx = context.WithValue(ctx, "bin", BurnMemBin)
-	return exec.Destroy(ctx, ce.channel, "mem load")
+	response := exec.Destroy(ctx, ce.channel, "mem load")
+	// umount tmpfs
+	ce.channel.Run(ctx, "umount", tmpfsName)
+	tmpfsPath := path.Join(util.GetProgramPath(), dirName)
+	ce.channel.Run(ctx, "rm", fmt.Sprintf("-rf %s", tmpfsPath))
+	return response
 }
