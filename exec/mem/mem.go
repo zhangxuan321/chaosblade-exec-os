@@ -19,7 +19,6 @@ package mem
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 	"path"
