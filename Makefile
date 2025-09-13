@@ -59,7 +59,7 @@ define build_for_platform
 	@echo "==> Building for $(1) (version: $(BLADE_VERSION))"
 	@mkdir -p $(call get_platform_bin_dir,$(1)) $(call get_platform_yaml_dir,$(1))
 	@GOOS=$(word 1,$(subst _, ,$(1))) GOARCH=$(word 2,$(subst _, ,$(1))) \
-	$(GO) build $(GO_FLAGS) -o $(call get_platform_bin_dir,$(1))/chaos_os main.go
+	CGO_ENABLED=0 $(GO) build $(GO_FLAGS) -o $(call get_platform_bin_dir,$(1))/chaos_os main.go
 	@cp extra/strace $(call get_platform_bin_dir,$(1))/ 2>/dev/null || true
 	@GOOS=$(CURRENT_OS) GOARCH=$(CURRENT_ARCH) $(GO) run build/spec.go $(call get_platform_yaml_dir,$(1))/$(OS_YAML_FILE_NAME)
 	@echo "✓ Build completed for $(1)"
@@ -80,7 +80,7 @@ pre_build_current:
 	@mkdir -p $(call get_platform_bin_dir,$(CURRENT_PLATFORM)) $(call get_platform_yaml_dir,$(CURRENT_PLATFORM))
 
 build_current_platform:
-	@$(GO) build $(GO_FLAGS) -o $(call get_platform_bin_dir,$(CURRENT_PLATFORM))/chaos_os main.go
+	@CGO_ENABLED=0 $(GO) build $(GO_FLAGS) -o $(call get_platform_bin_dir,$(CURRENT_PLATFORM))/chaos_os main.go
 	@cp extra/strace $(call get_platform_bin_dir,$(CURRENT_PLATFORM))/ 2>/dev/null || true
 	@$(GO) run build/spec.go $(call get_platform_yaml_dir,$(CURRENT_PLATFORM))/$(OS_YAML_FILE_NAME)
 	@echo "✓ Build completed for $(CURRENT_PLATFORM)"
@@ -111,7 +111,7 @@ build_all: clean linux_amd64 darwin_amd64 linux_arm64 darwin_arm64
 version_tool: cmd/version/main.go
 	@echo "==> Building version tool..."
 	@mkdir -p bin
-	@$(GO) build $(GO_FLAGS) -o bin/version cmd/version/main.go
+	@CGO_ENABLED=0 $(GO) build $(GO_FLAGS) -o bin/version cmd/version/main.go
 	@echo "✓ Version tool built: bin/version"
 
 # Test version injection
