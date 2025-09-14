@@ -3,6 +3,17 @@ name: Release
 on:
   push:
     tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.8.0)'
+        required: true
+        type: string
+      draft:
+        description: 'Create as draft release'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-matrix:
@@ -170,40 +181,11 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          name: ChaosBlade Exec OS ${{ github.ref_name }}
-          body: |
-            ## ChaosBlade Exec OS ${{ github.ref_name }}
-            
-            ### Download Files
-            
-            | Platform | Architecture | Download Link |
-            |----------|--------------|---------------|
-            | Linux | amd64 | [chaosblade-exec-os-${{ github.ref_name }}-linux_amd64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/chaosblade-exec-os-${{ github.ref_name }}-linux_amd64.tar.gz) |
-            | Linux | arm64 | [chaosblade-exec-os-${{ github.ref_name }}-linux_arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/chaosblade-exec-os-${{ github.ref_name }}-linux_arm64.tar.gz) |
-            | macOS | amd64 | [chaosblade-exec-os-${{ github.ref_name }}-darwin_amd64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/chaosblade-exec-os-${{ github.ref_name }}-darwin_amd64.tar.gz) |
-            | macOS | arm64 | [chaosblade-exec-os-${{ github.ref_name }}-darwin_arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/chaosblade-exec-os-${{ github.ref_name }}-darwin_arm64.tar.gz) |
-            
-            ### Installation Instructions
-            
-            1. Download the archive for your platform
-            2. Extract to target directory
-            3. Add `bin/chaos_os` to your PATH environment variable
-            
-            ### Package Contents
-            
-            Each archive contains:
-            - `bin/chaos_os` - Main executable file
-            - `bin/strace` - strace tool (if available)
-            - `yaml/chaosblade-os-spec-${{ github.ref_name }}.yaml` - Configuration file
-            
-            ### Version Information
-            
-            - Version: ${{ github.ref_name }}
-            - Build Time: ${{ github.event.head_commit.timestamp }}
-            - Git Commit: ${{ github.sha }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
           files: |
             ./artifacts/*/chaosblade-exec-os-*.tar.gz
-          draft: false
+          draft: ${{ github.event.inputs.draft == 'true' }}
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
