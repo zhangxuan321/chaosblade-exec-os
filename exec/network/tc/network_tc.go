@@ -135,7 +135,7 @@ func startNet(ctx context.Context, netInterface, classRule, localPort, remotePor
 		return response
 	}
 	destIpRules := getIpRules(destIp)
-	excludeIpRules := getIpRules(excludeIp)
+	excludeIpRules := getExcludeIpRules(excludeIp)
 	// local port or remote port
 	return executeTargetPortAndIpWithExclude(ctx, cl, netInterface, classRule, localPortRanges, remotePortRanges, destIpRules,
 		excludePortRanges, excludeIpRules, protocol)
@@ -177,11 +177,11 @@ func getExcludePortRanges(ctx context.Context, excludePort string, ignorePeerPor
 
 func buildExcludeFilterToNewBand(netInterface string, excludePortRanges [][]int, excludeIp string) string {
 	var args string
-	excludeIpRules := getIpRules(excludeIp)
+	excludeIpRules := getExcludeIpRules(excludeIp)
 	for _, rule := range excludeIpRules {
 		args = fmt.Sprintf(
 			`%s && \
-			tc filter add dev %s parent 1: prio 4 protocol ip u32 %s flowid 1:4`,
+			tc filter add dev %s parent 1: prio 1 protocol ip u32 %s flowid 1:4`,
 			args, netInterface, rule)
 	}
 
@@ -190,8 +190,8 @@ func buildExcludeFilterToNewBand(netInterface string, excludePortRanges [][]int,
 		for _, mask := range masks {
 			args = fmt.Sprintf(
 				`%s && \
-                tc filter add dev %s parent 1: prio 4 protocol ip u32 match ip dport %d %#x flowid 1:4 && \
-                tc filter add dev %s parent 1: prio 4 protocol ip u32 match ip sport %d %#x flowid 1:4`,
+                tc filter add dev %s parent 1: prio 1 protocol ip u32 match ip dport %d %#x flowid 1:4 && \
+                tc filter add dev %s parent 1: prio 1 protocol ip u32 match ip sport %d %#x flowid 1:4`,
 				args, netInterface, mask[0], mask[1], netInterface, mask[0], mask[1])
 		}
 	}
@@ -255,6 +255,24 @@ func getIpRules(targetIp string) []string {
 		if strings.TrimSpace(ip) == "" {
 			continue
 		}
+		ipRules = append(ipRules, fmt.Sprintf("match ip dst %s", ip))
+	}
+	return ipRules
+}
+
+func getExcludeIpRules(excludeIp string) []string {
+	if excludeIp == "" {
+		return []string{}
+	}
+	ipString := strings.TrimSpace(excludeIp)
+	ips := strings.Split(ipString, delimiter)
+	ipRules := make([]string, 0)
+	for _, ip := range ips {
+		if strings.TrimSpace(ip) == "" {
+			continue
+		}
+		// For exclude-ip, we need to match both source and destination IP
+		ipRules = append(ipRules, fmt.Sprintf("match ip src %s", ip))
 		ipRules = append(ipRules, fmt.Sprintf("match ip dst %s", ip))
 	}
 	return ipRules
@@ -342,7 +360,7 @@ func buildTargetFilterPortAndIp(localPortRanges, remotePortRanges [][]int, destI
 		for _, ipRule := range excludeIpRules {
 			args = fmt.Sprintf(
 				`%s && \
-				tc filter add dev %s parent 1: prio 3 protocol ip u32 %s %s flowid 1:3`,
+				tc filter add dev %s parent 1: prio 1 protocol ip u32 %s %s flowid 1:3`,
 				args, netInterface, ipRule, protocolrule)
 		}
 	}
@@ -353,8 +371,8 @@ func buildTargetFilterPortAndIp(localPortRanges, remotePortRanges [][]int, destI
 			for _, mask := range masks {
 				args = fmt.Sprintf(
 					`%s && \
-                    tc filter add dev %s parent 1: prio 3 protocol ip u32 match ip dport %d %#x %s flowid 1:3 && \
-                    tc filter add dev %s parent 1: prio 3 protocol ip u32 match ip sport %d %#x %s flowid 1:3`,
+                    tc filter add dev %s parent 1: prio 1 protocol ip u32 match ip dport %d %#x %s flowid 1:3 && \
+                    tc filter add dev %s parent 1: prio 1 protocol ip u32 match ip sport %d %#x %s flowid 1:3`,
 					args, netInterface, mask[0], mask[1], protocolrule, netInterface, mask[0], mask[1], protocolrule)
 			}
 		}
