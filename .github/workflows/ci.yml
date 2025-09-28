@@ -2,7 +2,8 @@ name: Build & Test
 
 on:
   push:
-    branches: [ main, master, deveops ]
+    branches: [ main, master ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main, master, dev-* ]
 
