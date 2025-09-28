@@ -103,7 +103,6 @@ func (*OccupyActionExecutor) Name() string {
 }
 
 func (oae *OccupyActionExecutor) Exec(uid string, ctx context.Context, model *spec.ExpModel) *spec.Response {
-
 	// check reboot permission
 	if osutil.Geteuid() != 0 {
 		// not root
