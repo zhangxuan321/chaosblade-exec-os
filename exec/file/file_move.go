@@ -63,11 +63,11 @@ func NewFileMoveActionSpec() spec.ExpActionCommandSpec {
 # Move the file /home/logs/nginx.log to /tmp
 blade create file move --filepath /home/logs/nginx.log --target /tmp
 
-# Force Move the file /home/logs/nginx.log to /temp
+# Force Move the file /home/logs/nginx.log to /tmp
 blade create file move --filepath /home/logs/nginx.log --target /tmp --force
 
-# Move the file /home/logs/nginx.log to /temp/ and automatically create directories that don't exist
-blade create file move --filepath /home/logs/nginx.log --target /temp --auto-create-dir
+# Move the file /home/logs/nginx.log to /tmp and automatically create directories that don't exist
+blade create file move --filepath /home/logs/nginx.log --target /tmp --auto-create-dir
 `,
 			ActionPrograms:   []string{MoveFileBin},
 			ActionCategories: []string{category.SystemFile},

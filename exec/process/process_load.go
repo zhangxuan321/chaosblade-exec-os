@@ -56,7 +56,7 @@ func NewProcessLoadActionCommandSpec() spec.ExpActionCommandSpec {
 			ActionExecutor: &ProcessLoadExecutor{},
 			ActionExample: `
 # create 10 process as user test
-blade c process load --count 10 --user test`,
+blade create process load --count 10 --user test`,
 			ActionPrograms:    []string{ProcessLoadBin},
 			ActionCategories:  []string{category.SystemProcess},
 			ActionProcessHang: true,

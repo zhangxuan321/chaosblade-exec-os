@@ -74,10 +74,10 @@ func NewFillActionSpec() spec.ExpActionCommandSpec {
 blade create disk fill --path /home --size 40000
 
 # Performs populating the disk by percentage, and retains the file handle that populates the disk
-Command: "blade c disk fill --path /home --percent 80 --retain-handle
+Command: "blade create disk fill --path /home --percent 80 --retain-handle
 
 # Perform a fixed-size experimental scenario
-blade c disk fill --path /home --reserve 1024`,
+blade create disk fill --path /home --reserve 1024`,
 			ActionPrograms:   []string{FillDiskBin},
 			ActionCategories: []string{category.SystemDisk},
 		},
