@@ -75,10 +75,10 @@ blade create process kill --process SimpleHTTPServer
 blade create process kill --process-cmd java
 
 # Specifies the semaphore and local port to kill the process
-blade c process kill --local-port 8080 --signal 15
+blade create process kill --local-port 8080 --signal 15
 
 # Return success even if the process not found
-blade c process kill --process demo --ignore-not-found`,
+blade create process kill --process demo --ignore-not-found`,
 			ActionPrograms:   []string{KillProcessBin},
 			ActionCategories: []string{category.SystemProcess},
 		},
